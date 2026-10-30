@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+/*
+  Admission PS design tokens.
+  Palette: peacock (trust, primary), gulmohar (attention, "unverified" stamps), marigold (highlights).
+  Type: Bricolage Grotesque for headings, Public Sans for reading text.
+*/
+@theme {
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --color-paper: #f4f8f8;
+  --color-ink-900: #152032;
+  --color-ink-700: #2b3a52;
+  --color-ink-500: #55637a;
+  --color-ink-300: #a4afbf;
+  --color-ink-200: #d3dae4;
+  --color-ink-100: #e9edf3;
+
+  --color-peacock-50: #e6f4f3;
+  --color-peacock-100: #cbe8e6;
+  --color-peacock-500: #12868f;
+  --color-peacock-600: #0a6e78;
+  --color-peacock-700: #0a5861;
+  --color-peacock-900: #08333a;
+
+  --color-gulmohar-50: #fdeee9;
+  --color-gulmohar-500: #e4572e;
+  --color-gulmohar-700: #a53718;
+
+  --color-marigold-100: #fdf0cc;
+  --color-marigold-400: #f5b52e;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink-900);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-marigold-400);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.75rem;
+    padding: 0.625rem 1.1rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    line-height: 1.25rem;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+  .btn-primary {
+    background: var(--color-peacock-600);
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: var(--color-peacock-700);
+  }
+  .btn-quiet {
+    background: #fff;
+    color: var(--color-ink-900);
+    border: 1px solid var(--color-ink-200);
+  }
+  .btn-quiet:hover {
+    border-color: var(--color-peacock-500);
+    color: var(--color-peacock-700);
+  }
+  .field {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-ink-200);
+    background: #fff;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.9375rem;
+    color: var(--color-ink-900);
+  }
+  .field:hover {
+    border-color: var(--color-ink-300);
+  }
+}
+
+/* A single, deliberate motion: the stamp settles onto the page once. */
+@keyframes stamp-in {
+  from {
+    opacity: 0;
+    transform: rotate(-9deg) scale(1.25);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-3deg) scale(1);
+  }
+}
+.stamp {
+  animation: stamp-in 0.28s ease-out both;
+}
