@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from . import models  # noqa: F401  (registers tables on Base.metadata)
 from .config import get_settings
 from .db import Base, engine, get_db
-from .routers import colleges
+from .routers import colleges, finder
 
 
 @asynccontextmanager
@@ -52,3 +52,5 @@ def health(db: Session = Depends(get_db)):
 
 
 app.include_router(colleges.router)
+app.include_router(finder.router)
+app.include_router(finder.router)
