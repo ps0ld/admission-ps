@@ -21,6 +21,8 @@ const QUALIFICATIONS: { value: Qualification; label: string }[] = [
   { value: "diploma", label: "Diploma" },
 ];
 const STREAMS: Stream[] = ["PCM", "PCB", "Commerce", "Arts", "Other"];
+// Keep in sync with DIPLOMA_BRANCHES in backend/app/services/eligibility.py.
+const BRANCHES = ["Computer", "Mechanical", "Civil", "Electrical", "Electronics", "Other"];
 
 const STATUS_META: Record<EligibilityStatus, { label: string; className: string }> = {
   eligible: { label: "Eligible", className: "bg-peacock-50 text-peacock-700" },
@@ -88,7 +90,7 @@ export default function Predictor() {
       else found.push("Choose your 12th stream.");
     } else {
       body.diploma_percentage = readPct("diploma percentage", diplomaPct, found);
-      if (branch.trim()) body.diploma_branch = branch.trim();
+      if (branch) body.diploma_branch = branch;
     }
     if (course.trim()) body.preferred_course = course.trim();
     if (state) body.state = state;
@@ -192,15 +194,18 @@ export default function Predictor() {
                   <label htmlFor="branch" className="mb-1.5 block text-sm font-semibold">
                     Diploma branch <span className="font-normal text-ink-500">(optional)</span>
                   </label>
-                  <input
-                    id="branch"
-                    className="field"
-                    value={branch}
-                    maxLength={80}
-                    onChange={(e) => setBranch(e.target.value)}
-                    placeholder="e.g. Computer Engineering"
-                  />
-                  <p className="mt-1 text-xs text-ink-500">Not used for matching yet. Branch-wise rules come with verified course data.</p>
+                  <select id="branch" className="field" value={branch} onChange={(e) => setBranch(e.target.value)}>
+                    <option value="">Not selected</option>
+                    {BRANCHES.map((b) => (
+                      <option key={b} value={b}>
+                        {b}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-ink-500">
+                    Some lateral-entry courses accept only certain branches. If you skip this or choose Other, those
+                    courses show Insufficient data. Pick Other if your branch is not listed.
+                  </p>
                 </div>
               </>
             )}
@@ -412,6 +417,9 @@ function ResultCard({ result: r }: { result: FinderResult }) {
                   <StatusBadge status={c.status} />
                 </div>
                 <p className="mt-1 text-ink-700">{c.reason}</p>
+                {c.allowed_branches && c.allowed_branches.length > 0 && (
+                  <p className="mt-1 text-ink-500">Open to diploma branches: {c.allowed_branches.join(", ")}</p>
+                )}
                 {c.admission_route && <p className="mt-1 text-ink-500">Admission route: {c.admission_route}</p>}
               </li>
             ))}

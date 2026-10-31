@@ -32,8 +32,17 @@ const RESPONSE: FinderResponse = {
       admission_url: null,
       verification_status: "unverified",
       status: "eligible",
-      reason: "Meets the minimum percentage.",
-      courses: [],
+      reason: "Meets the stated minimum of 50%.",
+      courses: [
+        {
+          course: "B.Tech Computer Science (Lateral)",
+          level: "Lateral",
+          status: "eligible",
+          reason: "Meets the stated minimum of 50%.",
+          admission_route: null,
+          allowed_branches: ["Computer", "Electronics"],
+        },
+      ],
     },
   ],
 };
@@ -65,6 +74,7 @@ describe("Predictor", () => {
 
     await user.click(screen.getByRole("radio", { name: /diploma/i }));
     expect(screen.getByLabelText(/diploma percentage/i)).toBeTruthy();
+    expect(screen.getByLabelText(/diploma branch/i)).toBeTruthy();
     expect(screen.queryByLabelText(/12th percentage/i)).toBeNull();
     expect(screen.queryByLabelText(/10th percentage/i)).toBeNull();
   });
@@ -95,6 +105,31 @@ describe("Predictor", () => {
     expect(await screen.findByText("Test Institute of Technology")).toBeTruthy();
     expect(screen.getAllByText("Eligible").length).toBeGreaterThan(0);
     expect(api.recommend).toHaveBeenCalledWith({ qualification: "10th", percentage_10: 75 }, expect.anything());
+  });
+
+  it("sends the diploma branch and shows which branches a course accepts", async () => {
+    vi.mocked(api.recommend).mockResolvedValue(RESPONSE);
+    const user = setup();
+    await user.click(screen.getByRole("radio", { name: /diploma/i }));
+    await user.type(screen.getByLabelText(/diploma percentage/i), "65");
+    await user.selectOptions(screen.getByLabelText(/diploma branch/i), "Computer");
+    await user.click(screen.getByRole("button", { name: /find colleges/i }));
+
+    expect(await screen.findByText(/Open to diploma branches: Computer, Electronics/)).toBeTruthy();
+    expect(api.recommend).toHaveBeenCalledWith(
+      { qualification: "diploma", diploma_percentage: 65, diploma_branch: "Computer" },
+      expect.anything(),
+    );
+  });
+
+  it("omits the branch when none is chosen", async () => {
+    vi.mocked(api.recommend).mockResolvedValue(RESPONSE);
+    const user = setup();
+    await user.click(screen.getByRole("radio", { name: /diploma/i }));
+    await user.type(screen.getByLabelText(/diploma percentage/i), "65");
+    await user.click(screen.getByRole("button", { name: /find colleges/i }));
+    await screen.findByText("Test Institute of Technology");
+    expect(api.recommend).toHaveBeenCalledWith({ qualification: "diploma", diploma_percentage: 65 }, expect.anything());
   });
 
   it("shows an error state when the request fails", async () => {

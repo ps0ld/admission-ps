@@ -10,8 +10,13 @@ checked, so course data is never entered without a trail.
 Expected columns (header names are case-insensitive, spaces = underscores):
   required : college_name, city, state, course_name, level, source_name,
              source_url, last_verified_on (YYYY-MM-DD)
-  optional : stream_required, min_percentage (0-100), eligibility_notes,
-             admission_route
+  optional : stream_required, allowed_branches, min_percentage (0-100),
+             eligibility_notes, admission_route
+
+allowed_branches is for Lateral courses only: diploma branches the course
+accepts, separated by | (for example Computer|Electronics). Allowed values:
+Computer, Mechanical, Civil, Electrical, Electronics, Other. Leave it empty
+when the college states no branch rule.
 
 The college must already exist (matched on college_name + city + state).
 Unknown colleges are rejected, never created.
@@ -26,6 +31,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..models import College, Course, DataSource
+from .eligibility import DIPLOMA_BRANCHES
 from .importer import ImportReport, _clean, _valid_url
 
 REQUIRED = [
@@ -49,6 +55,7 @@ def import_courses_dataframe(db: Session, df: pd.DataFrame, commit: bool = True)
         (c.name.lower(), c.city.lower(), c.state.lower()): c
         for c in db.scalars(select(College)).all()
     }
+    branch_names = {b.lower(): b for b in DIPLOMA_BRANCHES}
     seen: set[tuple[int, str, str]] = set()
     sources: dict[str, DataSource] = {}
 
@@ -70,6 +77,21 @@ def import_courses_dataframe(db: Session, df: pd.DataFrame, commit: bool = True)
         if stream and stream not in STREAMS:
             report.rejected.append((line, f"unknown stream_required '{stream}'"))
             continue
+
+        allowed_branches = None
+        branches_text = _clean(row.get("allowed_branches"))
+        if branches_text:
+            if level != "Lateral":
+                report.rejected.append((line, "allowed_branches applies only to Lateral courses"))
+                continue
+            parts = [p.strip() for p in branches_text.split("|") if p.strip()]
+            unknown = [p for p in parts if p.lower() not in branch_names]
+            if unknown:
+                report.rejected.append(
+                    (line, f"unknown branch {', '.join(unknown)} (use {', '.join(DIPLOMA_BRANCHES)})")
+                )
+                continue
+            allowed_branches = "|".join(dict.fromkeys(branch_names[p.lower()] for p in parts)) or None
 
         min_pct = None
         pct_text = _clean(row.get("min_percentage"))
@@ -131,6 +153,7 @@ def import_courses_dataframe(db: Session, df: pd.DataFrame, commit: bool = True)
             name=course_name,
             level=level,
             stream_required=stream,
+            allowed_branches=allowed_branches,
             min_percentage=min_pct,
             eligibility_notes=_clean(row.get("eligibility_notes")),
             admission_route=route,

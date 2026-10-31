@@ -83,6 +83,9 @@ class Course(Base):
     name: Mapped[str] = mapped_column(String(200))          # e.g. B.Tech Computer Science
     level: Mapped[str] = mapped_column(String(30))          # UG | PG | Diploma | Lateral
     stream_required: Mapped[str | None] = mapped_column(String(40))  # PCM | PCB | Commerce | Arts
+    # Lateral courses only: diploma branches accepted, pipe-separated (e.g. "Computer|Electronics").
+    # Empty = no branch rule stated. Added in Phase 2 (see migrations/001_add_courses_allowed_branches.sql).
+    allowed_branches: Mapped[str | None] = mapped_column(String(500))
     duration_years: Mapped[float | None] = mapped_column(Float)
     min_percentage: Mapped[float | None] = mapped_column(Float)      # eligibility cut, if officially stated
     eligibility_notes: Mapped[str | None] = mapped_column(Text)

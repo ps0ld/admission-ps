@@ -4,13 +4,20 @@ from __future__ import annotations
 from typing import Literal
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from ..db import get_db
 from ..models import College
-from ..services.eligibility import ELIGIBLE, INSUFFICIENT, NOT_ELIGIBLE, evaluate
+from ..services.eligibility import (
+    DIPLOMA_BRANCHES,
+    ELIGIBLE,
+    INSUFFICIENT,
+    NOT_ELIGIBLE,
+    evaluate,
+    split_branches,
+)
 
 router = APIRouter(prefix="/api/finder", tags=["finder"])
 Pct = Field(None, ge=0, le=100)
@@ -25,6 +32,17 @@ class FinderRequest(BaseModel):
     diploma_branch: str | None = Field(None, max_length=80)
     preferred_course: str | None = Field(None, max_length=80)
     state: str | None = Field(None, max_length=80)
+
+    @field_validator("diploma_branch")
+    @classmethod
+    def _known_branch(cls, value):
+        if value is None or not value.strip():
+            return None
+        canonical = {b.lower(): b for b in DIPLOMA_BRANCHES}
+        found = canonical.get(value.strip().lower())
+        if found is None:
+            raise ValueError(f"diploma_branch must be one of: {', '.join(DIPLOMA_BRANCHES)}")
+        return found
 
     @model_validator(mode="after")
     def _required_fields(self):
@@ -51,9 +69,10 @@ def recommend(req: FinderRequest, db: Session = Depends(get_db)):
         courses = [x for x in c.courses if not pref or pref in x.name.lower()]
         evals = []
         for x in courses:
-            status, reason = evaluate(x, req.qualification, req.score(), req.stream)
+            status, reason = evaluate(x, req.qualification, req.score(), req.stream, req.diploma_branch)
             evals.append({"course": x.name, "level": x.level, "status": status, "reason": reason,
-                          "admission_route": x.admission_route})
+                          "admission_route": x.admission_route,
+                          "allowed_branches": split_branches(getattr(x, "allowed_branches", None))})
         if not evals:
             status, evals = INSUFFICIENT, []
             reason = "No course data for this college yet."

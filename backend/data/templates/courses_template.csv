@@ -1,1 +1,1 @@
-college_name,city,state,course_name,level,stream_required,min_percentage,eligibility_notes,admission_route,source_name,source_url,last_verified_on
+college_name,city,state,course_name,level,stream_required,allowed_branches,min_percentage,eligibility_notes,admission_route,source_name,source_url,last_verified_on

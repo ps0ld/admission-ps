@@ -111,6 +111,7 @@ export interface FinderCourse {
   status: EligibilityStatus;
   reason: string;
   admission_route: string | null;
+  allowed_branches: string[];
 }
 
 export interface FinderResult {
