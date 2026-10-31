@@ -5,7 +5,8 @@ import Compare from "./pages/Compare";
 import Explore from "./pages/Explore";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
-import { Chat, Dashboard, Login, Predictor } from "./pages/Upcoming";
+import Predictor from "./pages/Predictor";
+import { Chat, Dashboard, Login } from "./pages/Upcoming";
 
 export default function App() {
   return (

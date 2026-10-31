@@ -87,3 +87,49 @@ export interface CollegeQuery {
   page?: number;
   page_size?: number;
 }
+
+// ---- Admission Predictor (POST /api/finder/recommend) ----
+
+export type Qualification = "10th" | "12th" | "diploma";
+export type Stream = "PCM" | "PCB" | "Commerce" | "Arts" | "Other";
+export type EligibilityStatus = "eligible" | "not_eligible" | "insufficient_data";
+
+export interface FinderRequest {
+  qualification: Qualification;
+  percentage_10?: number;
+  percentage_12?: number;
+  stream?: Stream;
+  diploma_percentage?: number;
+  diploma_branch?: string;
+  preferred_course?: string;
+  state?: string;
+}
+
+export interface FinderCourse {
+  course: string;
+  level: string;
+  status: EligibilityStatus;
+  reason: string;
+  admission_route: string | null;
+  allowed_branches: string[];
+}
+
+export interface FinderResult {
+  slug: string;
+  name: string;
+  city: string;
+  state: string;
+  ownership: string;
+  website: string | null;
+  admission_url: string | null;
+  verification_status: "verified" | "unverified";
+  status: EligibilityStatus;
+  reason: string;
+  courses: FinderCourse[];
+}
+
+export interface FinderResponse {
+  count: number;
+  results: FinderResult[];
+  note: string;
+}
