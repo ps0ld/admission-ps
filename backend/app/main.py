@@ -53,4 +53,3 @@ def health(db: Session = Depends(get_db)):
 
 app.include_router(colleges.router)
 app.include_router(finder.router)
-app.include_router(finder.router)
